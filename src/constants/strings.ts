@@ -1,4 +1,4 @@
-export const GAME_TITLE = process.env.REACT_APP_GAME_NAME!
+export const GAME_TITLE = 'Termola'
 
 export const WIN_MESSAGES = ['Ótimo trabalho!', 'Incrível', 'Muito bem!']
 export const GAME_COPIED_MESSAGE = 'Jogo copiado para a área de transferência'
@@ -15,8 +15,8 @@ export const WRONG_SPOT_MESSAGE = (guess: string, position: number) =>
   `Deve usar ${guess} na posição ${position}`
 export const NOT_CONTAINED_MESSAGE = (letter: string) =>
   `O palpite deve conter ${letter}`
-export const ENTER_TEXT = 'Enter'
-export const DELETE_TEXT = 'Delete'
+export const ENTER_TEXT = 'ENVIAR'
+export const DELETE_TEXT = 'APAGAR'
 export const STATISTICS_TITLE = 'Estatísticas'
 export const GUESS_DISTRIBUTION_TEXT = 'Distribuição de Palpites'
 export const NEW_WORD_TEXT = 'Nova palavra em'
