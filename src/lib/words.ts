@@ -11,9 +11,9 @@ import queryString from 'query-string'
 import { ENABLE_ARCHIVED_GAMES } from '../constants/settings'
 import { NOT_CONTAINED_MESSAGE, WRONG_SPOT_MESSAGE } from '../constants/strings'
 import { VALID_GUESSES } from '../constants/validGuesses'
-import words from '../constants/words.json'
-import { getToday } from './dateutils'
 import { getGuessStatuses } from './statuses'
+import words from '../constants/palavras.json'
+import { getToday } from './dateutils'
 
 const WORDS = words.respostas
 
@@ -21,30 +21,38 @@ const WORDS = words.respostas
 export const firstGameDate = new Date(2022, 0)
 export const periodInDays = 1
 
+// Normalization function: remove accents and lowercase
+const normalize = (text: string) => {
+  return text.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
+}
+
+// Precompute normalized sets for fast lookup
+const NORMALIZED_WORDS_SET = new Set(WORDS.map(normalize))
+const NORMALIZED_VALID_GUESSES_SET = new Set(VALID_GUESSES.map(normalize))
+
 let solutionDate: Date = new Date()
-let solutionIndex: number = 0
-let solution: string = pickRandomSolution()
+let solution: string = pickRandomSolution() // original word from dictionary (lowercase with accents)
 
 function pickRandomSolution(): string {
   const idx = Math.floor(Math.random() * WORDS.length)
-  return localeAwareUpperCase(WORDS[idx])
+  return WORDS[idx] // return original word as is
 }
 
 export function resetSolution(): void {
   solutionDate = new Date()
-  solutionIndex = 0
   solution = pickRandomSolution()
 }
 
 export const isWordInWordList = (word: string) => {
+  const normalizedWord = normalize(word)
   return (
-    WORDS.includes(localeAwareLowerCase(word)) ||
-    VALID_GUESSES.includes(localeAwareLowerCase(word))
+    NORMALIZED_WORDS_SET.has(normalizedWord) ||
+    NORMALIZED_VALID_GUESSES_SET.has(normalizedWord)
   )
 }
 
 export const isWinningWord = (word: string) => {
-  return solution === word
+  return normalize(word) === normalize(solution)
 }
 
 // build a set of previously revealed letters - present and correct
@@ -95,15 +103,11 @@ export const unicodeLength = (word: string) => {
 }
 
 export const localeAwareLowerCase = (text: string) => {
-  return process.env.REACT_APP_LOCALE_STRING
-    ? text.toLocaleLowerCase(process.env.REACT_APP_LOCALE_STRING)
-    : text.toLowerCase()
+  return normalize(text) // ignore locale, always use normalization
 }
 
 export const localeAwareUpperCase = (text: string) => {
-  return process.env.REACT_APP_LOCALE_STRING
-    ? text.toLocaleUpperCase(process.env.REACT_APP_LOCALE_STRING)
-    : text.toUpperCase()
+  return normalize(text).toUpperCase() // normalized uppercase without accents
 }
 
 export const getLastGameDate = (today: Date) => {
