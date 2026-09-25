@@ -21,6 +21,21 @@ const WORDS = words.respostas
 export const firstGameDate = new Date(2022, 0)
 export const periodInDays = 1
 
+let solutionDate: Date = new Date()
+let solutionIndex: number = 0
+let solution: string = pickRandomSolution()
+
+function pickRandomSolution(): string {
+  const idx = Math.floor(Math.random() * WORDS.length)
+  return localeAwareUpperCase(WORDS[idx])
+}
+
+export function resetSolution(): void {
+  solutionDate = new Date()
+  solutionIndex = 0
+  solution = pickRandomSolution()
+}
+
 export const isWordInWordList = (word: string) => {
   return (
     WORDS.includes(localeAwareLowerCase(word)) ||
@@ -124,7 +139,6 @@ export const getWordOfDay = (index: number) => {
   if (index < 0) {
     throw new Error('Invalid index')
   }
-
   return localeAwareUpperCase(WORDS[index % WORDS.length])
 }
 
@@ -178,5 +192,8 @@ export const getIsLatestGame = () => {
   return parsed === null || !('d' in parsed)
 }
 
-export const { solution, solutionGameDate, solutionIndex, tomorrow } =
+export const { solution: exportedSolution, solutionGameDate: exportedSolutionGameDate, solutionIndex: exportedSolutionIndex, tomorrow: exportedTomorrow } =
   getSolution(getGameDate())
+
+// Re-export for compatibility
+export { exportedSolution as solution, exportedSolutionGameDate as solutionGameDate, exportedSolutionIndex as solutionIndex, exportedTomorrow as tomorrow }

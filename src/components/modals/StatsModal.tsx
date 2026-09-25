@@ -38,6 +38,8 @@ type Props = {
   isDarkMode: boolean
   isHighContrastMode: boolean
   numberOfGuessesMade: number
+  onPlayAgain: () => void
+  maxChallenges: number
 }
 
 export const StatsModal = ({
@@ -56,6 +58,8 @@ export const StatsModal = ({
   isDarkMode,
   isHighContrastMode,
   numberOfGuessesMade,
+  onPlayAgain,
+  maxChallenges,
 }: Props) => {
   if (gameStats.totalGames <= 0) {
     return (
@@ -126,12 +130,20 @@ export const StatsModal = ({
                   isDarkMode,
                   isHighContrastMode,
                   handleShareToClipboard,
-                  handleShareFailure
+                  handleShareFailure,
+                  maxChallenges
                 )
               }}
             >
               <ShareIcon className="mr-2 h-6 w-6 cursor-pointer dark:stroke-white" />
               {SHARE_TEXT}
+            </button>
+            <button
+              type="button"
+              className="mt-2 inline-flex w-full items-center justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-center text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:text-base"
+              onClick={onPlayAgain}
+            >
+              Jogar Novamente
             </button>
           </div>
         </div>

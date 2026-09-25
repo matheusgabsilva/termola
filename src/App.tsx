@@ -19,7 +19,6 @@ import {
   DATE_LOCALE,
   DISCOURAGE_INAPP_BROWSERS,
   LONG_ALERT_TIME_MS,
-  MAX_CHALLENGES,
   REVEAL_TIME_MS,
   WELCOME_INFO_MODAL_MS,
 } from './constants/settings'
@@ -48,10 +47,13 @@ import {
   getIsLatestGame,
   isWinningWord,
   isWordInWordList,
-  setGameDate,
+  resetSolution,
   solution,
   solutionGameDate,
+  solutionIndex,
+  tomorrow,
   unicodeLength,
+  setGameDate,
 } from './lib/words'
 
 function App() {
@@ -92,7 +94,7 @@ function App() {
     if (gameWasWon) {
       setIsGameWon(true)
     }
-    if (loaded.guesses.length === MAX_CHALLENGES && !gameWasWon) {
+    if (loaded.guesses.length === maxChallenges && !gameWasWon) {
       setIsGameLost(true)
       showErrorAlert(CORRECT_WORD_MESSAGE(solution), {
         persist: true,
@@ -101,13 +103,26 @@ function App() {
     return loaded.guesses
   })
 
-  const [stats, setStats] = useState(() => loadStats())
+  const [stats, setStats] = useState(() => loadStats(maxChallenges))
 
   const [isHardMode, setIsHardMode] = useState(
     localStorage.getItem('gameMode')
       ? localStorage.getItem('gameMode') === 'hard'
       : false
   )
+
+  // Difficulty state: easy (8), medium (6), hard (5)
+  const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>(
+    () => {
+      const saved = localStorage.getItem('difficulty')
+      if (saved === 'easy' || saved === 'medium' || saved === 'hard') {
+        return saved as 'easy' | 'medium' | 'hard'
+      }
+      return 'medium'
+    }
+  )
+
+  const maxChallenges = difficulty === 'easy' ? 8 : difficulty === 'hard' ? 5 : 6
 
   useEffect(() => {
     // if no game state on load,
@@ -117,7 +132,7 @@ function App() {
         setIsInfoModalOpen(true)
       }, WELCOME_INFO_MODAL_MS)
     }
-  })
+  }, [])
 
   useEffect(() => {
     DISCOURAGE_INAPP_BROWSERS &&
@@ -161,6 +176,13 @@ function App() {
     setStoredIsHighContrastMode(isHighContrast)
   }
 
+  const handleDifficultyChange = (newDifficulty: 'easy' | 'medium' | 'hard') => {
+    setDifficulty(newDifficulty)
+    localStorage.setItem('difficulty', newDifficulty)
+    // Reset game when difficulty changes
+    handlePlayAgain()
+  }
+
   const clearCurrentRowClass = () => {
     setCurrentRowClass('')
   }
@@ -191,7 +213,7 @@ function App() {
   const onChar = (value: string) => {
     if (
       unicodeLength(`${currentGuess}${value}`) <= solution.length &&
-      guesses.length < MAX_CHALLENGES &&
+      guesses.length < maxChallenges &&
       !isGameWon
     ) {
       setCurrentGuess(`${currentGuess}${value}`)
@@ -245,7 +267,7 @@ function App() {
 
     if (
       unicodeLength(currentGuess) === solution.length &&
-      guesses.length < MAX_CHALLENGES &&
+      guesses.length < maxChallenges &&
       !isGameWon
     ) {
       setGuesses([...guesses, currentGuess])
@@ -253,14 +275,14 @@ function App() {
 
       if (winningWord) {
         if (isLatestGame) {
-          setStats(addStatsForCompletedGame(stats, guesses.length))
+          setStats(addStatsForCompletedGame(stats, guesses.length, maxChallenges))
         }
         return setIsGameWon(true)
       }
 
-      if (guesses.length === MAX_CHALLENGES - 1) {
+      if (guesses.length === maxChallenges - 1) {
         if (isLatestGame) {
-          setStats(addStatsForCompletedGame(stats, guesses.length + 1))
+          setStats(addStatsForCompletedGame(stats, guesses.length + 1, maxChallenges))
         }
         setIsGameLost(true)
         showErrorAlert(CORRECT_WORD_MESSAGE(solution), {
@@ -269,6 +291,21 @@ function App() {
         })
       }
     }
+  }
+
+  const handlePlayAgain = () => {
+    // Reset solution
+    resetSolution()
+    // Clear guesses
+    setGuesses([])
+    setCurrentGuess('')
+    setIsGameWon(false)
+    setIsGameLost(false)
+    // Clear game state from localStorage
+    localStorage.removeItem('gameState')
+    // Optionally clear stats? No, keep stats across games.
+    // Close stats modal if open
+    setIsStatsModalOpen(false)
   }
 
   return (
@@ -291,13 +328,14 @@ function App() {
         )}
 
         <div className="mx-auto flex w-full grow flex-col px-1 pt-2 pb-8 sm:px-6 md:max-w-7xl lg:px-8 short:pb-2 short:pt-2">
-          <div className="flex grow flex-col justify-center pb-6 short:pb-2">
+          <div className="flex flex-col justify-center pb-6 short:pb-2">
             <Grid
               solution={solution}
               guesses={guesses}
               currentGuess={currentGuess}
               isRevealing={isRevealing}
               currentRowClassName={currentRowClass}
+              maxChallenges={maxChallenges}
             />
           </div>
           <Keyboard
@@ -335,6 +373,8 @@ function App() {
             isDarkMode={isDarkMode}
             isHighContrastMode={isHighContrastMode}
             numberOfGuessesMade={guesses.length}
+            maxChallenges={maxChallenges}
+            onPlayAgain={handlePlayAgain}
           />
           <DatePickerModal
             isOpen={isDatePickerModalOpen}
@@ -358,6 +398,8 @@ function App() {
             handleDarkMode={handleDarkMode}
             isHighContrastMode={isHighContrastMode}
             handleHighContrastMode={handleHighContrastMode}
+            difficulty={difficulty}
+            onDifficultyChange={handleDifficultyChange}
           />
           <AlertContainer />
         </div>

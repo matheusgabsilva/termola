@@ -10,7 +10,10 @@ import { MigrationStats } from '../modals/MigrateStatsModal'
 export const EmigratePanel = () => {
   const [isCopyButtonEnabled, setIsCopyButtonEnabled] = useState(true)
   const [copyButtonText, setCopyButtonText] = useState('Copy')
-  const stats = loadStats()
+  // Get difficulty from localStorage, default to medium
+  const difficulty = localStorage.getItem('difficulty') ?? 'medium'
+  const maxChallenges = difficulty === 'easy' ? 8 : difficulty === 'hard' ? 5 : 6
+  const stats = loadStats(maxChallenges)
   const gameState = loadGameStateFromLocalStorage(true)
 
   const migrationStats: MigrationStats = {
