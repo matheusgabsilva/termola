@@ -87,10 +87,10 @@ function App() {
   const [isRevealing, setIsRevealing] = useState(false)
   const [guesses, setGuesses] = useState<string[]>(() => {
     const loaded = loadGameStateFromLocalStorage(isLatestGame)
-    if (loaded?.solution !== solution) {
+    if (!loaded || !loaded?.solution || !isWinningWord(loaded?.solution)) {
       return []
     }
-    const gameWasWon = loaded.guesses.includes(solution)
+    const gameWasWon = loaded.guesses.some(isWinningWord)
     if (gameWasWon) {
       setIsGameWon(true)
     }
@@ -211,6 +211,7 @@ function App() {
   }, [isGameWon, isGameLost, showSuccessAlert])
 
   const onChar = (value: string) => {
+    if (isGameWon || isGameLost) return;
     if (
       unicodeLength(`${currentGuess}${value}`) <= solution.length &&
       guesses.length < maxChallenges &&
@@ -221,6 +222,7 @@ function App() {
   }
 
   const onDelete = () => {
+    if (isGameWon || isGameLost) return;
     setCurrentGuess(
       new GraphemeSplitter().splitGraphemes(currentGuess).slice(0, -1).join('')
     )
