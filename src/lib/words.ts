@@ -11,9 +11,11 @@ import queryString from 'query-string'
 import { ENABLE_ARCHIVED_GAMES } from '../constants/settings'
 import { NOT_CONTAINED_MESSAGE, WRONG_SPOT_MESSAGE } from '../constants/strings'
 import { VALID_GUESSES } from '../constants/validGuesses'
-import { WORDS } from '../constants/wordlist'
+import words from '../constants/words.json'
 import { getToday } from './dateutils'
 import { getGuessStatuses } from './statuses'
+
+const WORDS = words.respostas
 
 // 1 January 2022 Game Epoch
 export const firstGameDate = new Date(2022, 0)
