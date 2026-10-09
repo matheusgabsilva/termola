@@ -51,7 +51,7 @@ export const SettingsModal = ({
           description={HIGH_CONTRAST_MODE_DESCRIPTION}
         />
         <div className="mt-4">
-          <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
+          <p className="mb-2 text-sm font-medium text-gray-900 dark:text-gray-100">
             Dificuldade
           </p>
           <div className="flex space-x-4">
@@ -62,7 +62,7 @@ export const SettingsModal = ({
                 value="easy"
                 checked={difficulty === 'easy'}
                 onChange={() => onDifficultyChange('easy')}
-                className="h-4 w-4 text-indigo-600 border-gray-300"
+                className="h-4 w-4 border-gray-300 text-indigo-600"
               />
               <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
                 Fácil (8 tentativas)
@@ -75,7 +75,7 @@ export const SettingsModal = ({
                 value="medium"
                 checked={difficulty === 'medium'}
                 onChange={() => onDifficultyChange('medium')}
-                className="h-4 w-4 text-indigo-600 border-gray-300"
+                className="h-4 w-4 border-gray-300 text-indigo-600"
               />
               <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
                 Médio (6 tentativas)
@@ -88,7 +88,7 @@ export const SettingsModal = ({
                 value="hard"
                 checked={difficulty === 'hard'}
                 onChange={() => onDifficultyChange('hard')}
-                className="h-4 w-4 text-indigo-600 border-gray-300"
+                className="h-4 w-4 border-gray-300 text-indigo-600"
               />
               <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
                 Difícil (5 tentativas)

@@ -10,7 +10,8 @@ export const InfoModal = ({ isOpen, handleClose }: Props) => {
   return (
     <BaseModal title="Como jogar" isOpen={isOpen} handleClose={handleClose}>
       <p className="text-sm text-gray-500 dark:text-gray-300">
-        Adivinhe a palavra em 6 tentativas. Após cada tentativa, a cor das células mudará para mostrar o quão perto seu palpite estava da palavra.
+        Adivinhe a palavra em 6 tentativas. Após cada tentativa, a cor das
+        células mudará para mostrar o quão perto seu palpite estava da palavra.
       </p>
 
       <div className="mb-1 mt-4 flex justify-center">
@@ -48,12 +49,7 @@ export const InfoModal = ({ isOpen, handleClose }: Props) => {
       <div className="mb-1 mt-4 flex justify-center">
         <Cell value="V" isCompleted={true} />
         <Cell value="A" isCompleted={true} />
-        <Cell
-          isRevealing={true}
-          isCompleted={true}
-          value="G"
-          status="absent"
-        />
+        <Cell isRevealing={true} isCompleted={true} value="G" status="absent" />
         <Cell value="A" isCompleted={true} />
         <Cell value="S" isCompleted={true} />
       </div>
@@ -62,7 +58,8 @@ export const InfoModal = ({ isOpen, handleClose }: Props) => {
       </p>
 
       <p className="mt-6 text-sm italic text-gray-500 dark:text-gray-300">
-        Esta é uma versão open source do jogo de adivinhação de palavras que todos conhecemos e amamos -{' '}
+        Esta é uma versão open source do jogo de adivinhação de palavras que
+        todos conhecemos e amamos -{' '}
         <a
           href="https://github.com/cwackerfuss/react-wordle"
           className="font-bold underline"

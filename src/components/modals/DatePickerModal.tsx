@@ -1,5 +1,5 @@
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/outline'
-import { addDays, format, startOfDay } from 'date-fns'
+import { format, startOfDay } from 'date-fns'
 import { useState } from 'react'
 import DatePicker, { registerLocale } from 'react-datepicker'
 
@@ -101,8 +101,8 @@ export const DatePickerModal = ({
                               nextMonthButtonDisabled &&
                               'cursor-not-allowed opacity-50'
                             }
-                            inline-flex rounded border border-gray-300 bg-white p-1 sm:text-base font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-0
-                            dark:border-gray-600 dark:bg-slate-700 dark:text-gray-200 dark:focus:ring-blue-600
+                            inline-flex rounded border border-gray-300 bg-white p-1 font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-0 dark:border-gray-600
+                            dark:bg-slate-700 dark:text-gray-200 dark:focus:ring-blue-600 sm:text-base
                         `}
                 >
                   <ChevronRightIcon className="h-5 w-5 text-gray-600 dark:text-gray-300" />

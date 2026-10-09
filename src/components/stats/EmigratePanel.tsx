@@ -12,7 +12,8 @@ export const EmigratePanel = () => {
   const [copyButtonText, setCopyButtonText] = useState('Copy')
   // Get difficulty from localStorage, default to medium
   const difficulty = localStorage.getItem('difficulty') ?? 'medium'
-  const maxChallenges = difficulty === 'easy' ? 8 : difficulty === 'hard' ? 5 : 6
+  const maxChallenges =
+    difficulty === 'easy' ? 8 : difficulty === 'hard' ? 5 : 6
   const stats = loadStats(maxChallenges)
   const gameState = loadGameStateFromLocalStorage(true)
 

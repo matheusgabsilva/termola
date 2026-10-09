@@ -1,7 +1,7 @@
 import './App.css'
 
 import { ClockIcon } from '@heroicons/react/outline'
-import { format } from 'date-fns'
+import { format, formatISO } from 'date-fns'
 import { default as GraphemeSplitter } from 'grapheme-splitter'
 import { useEffect, useState } from 'react'
 import Div100vh from 'react-div-100vh'
@@ -34,6 +34,7 @@ import {
 } from './constants/strings'
 import { useAlert } from './context/AlertContext'
 import { isInAppBrowser } from './lib/browser'
+import { getToday } from './lib/dateutils'
 import {
   getStoredIsHighContrastMode,
   loadGameStateFromLocalStorage,
@@ -42,18 +43,17 @@ import {
 } from './lib/localStorage'
 import { addStatsForCompletedGame, loadStats } from './lib/stats'
 import {
+  defaultSolution,
   findFirstUnusedReveal,
   getGameDate,
   getIsLatestGame,
   isWinningWord,
   isWordInWordList,
-  resetSolution,
-  solution,
-  solutionGameDate,
-  solutionIndex,
-  tomorrow,
-  unicodeLength,
+  pickRandomSolution,
+  setActiveSolution,
   setGameDate,
+  solutionGameDate,
+  unicodeLength,
 } from './lib/words'
 
 function App() {
@@ -65,6 +65,39 @@ function App() {
 
   const { showError: showErrorAlert, showSuccess: showSuccessAlert } =
     useAlert()
+
+  // Difficulty state: easy (8), medium (6), hard (5)
+  const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>(
+    () => {
+      const saved = localStorage.getItem('difficulty')
+      if (saved === 'easy' || saved === 'medium' || saved === 'hard') {
+        return saved as 'easy' | 'medium' | 'hard'
+      }
+      return 'medium'
+    }
+  )
+
+  const maxChallenges =
+    difficulty === 'easy' ? 8 : difficulty === 'hard' ? 5 : 6
+
+  const [solution, setSolution] = useState<string>(() => {
+    const loaded = loadGameStateFromLocalStorage(isLatestGame)
+    const todayStr = formatISO(getToday(), { representation: 'date' })
+    if (
+      loaded &&
+      loaded.solution &&
+      (!isLatestGame ||
+        (loaded.gameDate
+          ? loaded.gameDate === todayStr
+          : loaded.solution === defaultSolution.solution))
+    ) {
+      setActiveSolution(loaded.solution)
+      return loaded.solution
+    }
+    setActiveSolution(defaultSolution.solution)
+    return defaultSolution.solution
+  })
+
   const [currentGuess, setCurrentGuess] = useState('')
   const [isGameWon, setIsGameWon] = useState(false)
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false)
@@ -85,18 +118,28 @@ function App() {
     getStoredIsHighContrastMode()
   )
   const [isRevealing, setIsRevealing] = useState(false)
+
   const [guesses, setGuesses] = useState<string[]>(() => {
     const loaded = loadGameStateFromLocalStorage(isLatestGame)
-    if (!loaded || !loaded?.solution || !isWinningWord(loaded?.solution)) {
+    const todayStr = formatISO(getToday(), { representation: 'date' })
+    if (
+      !loaded ||
+      !loaded.solution ||
+      (isLatestGame && loaded.gameDate && loaded.gameDate !== todayStr) ||
+      (isLatestGame &&
+        !loaded.gameDate &&
+        loaded.solution !== defaultSolution.solution)
+    ) {
       return []
     }
-    const gameWasWon = loaded.guesses.some(isWinningWord)
+    const sol = loaded.solution
+    const gameWasWon = loaded.guesses.some((g) => isWinningWord(g, sol))
     if (gameWasWon) {
       setIsGameWon(true)
     }
-    if (loaded.guesses.length === maxChallenges && !gameWasWon) {
+    if (loaded.guesses.length >= maxChallenges && !gameWasWon) {
       setIsGameLost(true)
-      showErrorAlert(CORRECT_WORD_MESSAGE(solution), {
+      showErrorAlert(CORRECT_WORD_MESSAGE(sol), {
         persist: true,
       })
     }
@@ -110,19 +153,6 @@ function App() {
       ? localStorage.getItem('gameMode') === 'hard'
       : false
   )
-
-  // Difficulty state: easy (8), medium (6), hard (5)
-  const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>(
-    () => {
-      const saved = localStorage.getItem('difficulty')
-      if (saved === 'easy' || saved === 'medium' || saved === 'hard') {
-        return saved as 'easy' | 'medium' | 'hard'
-      }
-      return 'medium'
-    }
-  )
-
-  const maxChallenges = difficulty === 'easy' ? 8 : difficulty === 'hard' ? 5 : 6
 
   useEffect(() => {
     // if no game state on load,
@@ -176,7 +206,9 @@ function App() {
     setStoredIsHighContrastMode(isHighContrast)
   }
 
-  const handleDifficultyChange = (newDifficulty: 'easy' | 'medium' | 'hard') => {
+  const handleDifficultyChange = (
+    newDifficulty: 'easy' | 'medium' | 'hard'
+  ) => {
     setDifficulty(newDifficulty)
     localStorage.setItem('difficulty', newDifficulty)
     // Reset game when difficulty changes
@@ -188,8 +220,13 @@ function App() {
   }
 
   useEffect(() => {
-    saveGameStateToLocalStorage(getIsLatestGame(), { guesses, solution })
-  }, [guesses])
+    const todayStr = formatISO(getToday(), { representation: 'date' })
+    saveGameStateToLocalStorage(getIsLatestGame(), {
+      guesses,
+      solution,
+      gameDate: todayStr,
+    })
+  }, [guesses, solution])
 
   useEffect(() => {
     if (isGameWon) {
@@ -208,10 +245,10 @@ function App() {
         setIsStatsModalOpen(true)
       }, (solution.length + 1) * REVEAL_TIME_MS)
     }
-  }, [isGameWon, isGameLost, showSuccessAlert])
+  }, [isGameWon, isGameLost, showSuccessAlert, solution.length])
 
   const onChar = (value: string) => {
-    if (isGameWon || isGameLost) return;
+    if (isGameWon || isGameLost) return
     if (
       unicodeLength(`${currentGuess}${value}`) <= solution.length &&
       guesses.length < maxChallenges &&
@@ -222,7 +259,7 @@ function App() {
   }
 
   const onDelete = () => {
-    if (isGameWon || isGameLost) return;
+    if (isGameWon || isGameLost) return
     setCurrentGuess(
       new GraphemeSplitter().splitGraphemes(currentGuess).slice(0, -1).join('')
     )
@@ -249,7 +286,11 @@ function App() {
 
     // enforce hard mode - all guesses must contain all previously revealed letters
     if (isHardMode) {
-      const firstMissingReveal = findFirstUnusedReveal(currentGuess, guesses)
+      const firstMissingReveal = findFirstUnusedReveal(
+        currentGuess,
+        guesses,
+        solution
+      )
       if (firstMissingReveal) {
         setCurrentRowClass('jiggle')
         return showErrorAlert(firstMissingReveal, {
@@ -265,26 +306,31 @@ function App() {
       setIsRevealing(false)
     }, REVEAL_TIME_MS * solution.length)
 
-    const winningWord = isWinningWord(currentGuess)
+    const winningWord = isWinningWord(currentGuess, solution)
 
     if (
       unicodeLength(currentGuess) === solution.length &&
       guesses.length < maxChallenges &&
       !isGameWon
     ) {
-      setGuesses([...guesses, currentGuess])
+      const newGuesses = [...guesses, currentGuess]
+      setGuesses(newGuesses)
       setCurrentGuess('')
 
       if (winningWord) {
         if (isLatestGame) {
-          setStats(addStatsForCompletedGame(stats, guesses.length, maxChallenges))
+          setStats(
+            addStatsForCompletedGame(stats, guesses.length, maxChallenges)
+          )
         }
         return setIsGameWon(true)
       }
 
-      if (guesses.length === maxChallenges - 1) {
+      if (newGuesses.length === maxChallenges) {
         if (isLatestGame) {
-          setStats(addStatsForCompletedGame(stats, guesses.length + 1, maxChallenges))
+          setStats(
+            addStatsForCompletedGame(stats, maxChallenges, maxChallenges)
+          )
         }
         setIsGameLost(true)
         showErrorAlert(CORRECT_WORD_MESSAGE(solution), {
@@ -296,17 +342,19 @@ function App() {
   }
 
   const handlePlayAgain = () => {
-    // Reset solution
-    resetSolution()
-    // Clear guesses
+    const newSolution = pickRandomSolution()
+    setActiveSolution(newSolution)
+    setSolution(newSolution)
     setGuesses([])
     setCurrentGuess('')
     setIsGameWon(false)
     setIsGameLost(false)
-    // Clear game state from localStorage
-    localStorage.removeItem('gameState')
-    // Optionally clear stats? No, keep stats across games.
-    // Close stats modal if open
+    const todayStr = formatISO(getToday(), { representation: 'date' })
+    saveGameStateToLocalStorage(isLatestGame, {
+      guesses: [],
+      solution: newSolution,
+      gameDate: todayStr,
+    })
     setIsStatsModalOpen(false)
   }
 

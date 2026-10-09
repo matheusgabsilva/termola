@@ -1,7 +1,7 @@
 import {
   GameStats,
   loadStatsFromLocalStorage,
-  saveStatsToLocalStorage
+  saveStatsToLocalStorage,
 } from './localStorage'
 
 // In stats array elements 0-(maxChallenges-1) are successes in 1-maxChallenges trys
@@ -12,7 +12,14 @@ export const addStatsForCompletedGame = (
   maxChallenges: number
 ) => {
   // Count is number of incorrect guesses before end.
-  const stats = { ...gameStats }
+  const stats = {
+    ...gameStats,
+    winDistribution: [...gameStats.winDistribution],
+  }
+
+  while (stats.winDistribution.length < maxChallenges) {
+    stats.winDistribution.push(0)
+  }
 
   stats.totalGames += 1
 

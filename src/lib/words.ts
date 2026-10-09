@@ -8,12 +8,12 @@ import {
 import { default as GraphemeSplitter } from 'grapheme-splitter'
 import queryString from 'query-string'
 
+import words from '../constants/palavras.json'
 import { ENABLE_ARCHIVED_GAMES } from '../constants/settings'
 import { NOT_CONTAINED_MESSAGE, WRONG_SPOT_MESSAGE } from '../constants/strings'
 import { VALID_GUESSES } from '../constants/validGuesses'
-import { getGuessStatuses } from './statuses'
-import words from '../constants/palavras.json'
 import { getToday } from './dateutils'
+import { getGuessStatuses } from './statuses'
 
 const WORDS = words.respostas
 
@@ -22,25 +22,20 @@ export const firstGameDate = new Date(2022, 0)
 export const periodInDays = 1
 
 // Normalization function: remove accents and lowercase
-const normalize = (text: string) => {
-  return text.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
+export const normalize = (text: string) => {
+  return text
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
 }
 
 // Precompute normalized sets for fast lookup
 const NORMALIZED_WORDS_SET = new Set(WORDS.map(normalize))
 const NORMALIZED_VALID_GUESSES_SET = new Set(VALID_GUESSES.map(normalize))
 
-let solutionDate: Date = new Date()
-let solution: string = pickRandomSolution() // original word from dictionary (lowercase with accents)
-
-function pickRandomSolution(): string {
+export const pickRandomSolution = (): string => {
   const idx = Math.floor(Math.random() * WORDS.length)
-  return WORDS[idx] // return original word as is
-}
-
-export function resetSolution(): void {
-  solutionDate = new Date()
-  solution = pickRandomSolution()
+  return localeAwareUpperCase(WORDS[idx])
 }
 
 export const isWordInWordList = (word: string) => {
@@ -51,21 +46,28 @@ export const isWordInWordList = (word: string) => {
   )
 }
 
-export const isWinningWord = (word: string) => {
-  return normalize(word) === normalize(solution)
+export const isWinningWord = (
+  word: string,
+  currentSolution: string = getActiveSolution()
+) => {
+  return normalize(word) === normalize(currentSolution)
 }
 
 // build a set of previously revealed letters - present and correct
 // guess must use correct letters in that space and any other revealed letters
 // also check if all revealed instances of a letter are used (i.e. two C's)
-export const findFirstUnusedReveal = (word: string, guesses: string[]) => {
+export const findFirstUnusedReveal = (
+  word: string,
+  guesses: string[],
+  currentSolution: string = getActiveSolution()
+) => {
   if (guesses.length === 0) {
     return false
   }
 
   const lettersLeftArray = new Array<string>()
   const guess = guesses[guesses.length - 1]
-  const statuses = getGuessStatuses(solution, guess)
+  const statuses = getGuessStatuses(currentSolution, guess)
   const splitWord = unicodeSplit(word)
   const splitGuess = unicodeSplit(guess)
 
@@ -196,8 +198,34 @@ export const getIsLatestGame = () => {
   return parsed === null || !('d' in parsed)
 }
 
-export const { solution: exportedSolution, solutionGameDate: exportedSolutionGameDate, solutionIndex: exportedSolutionIndex, tomorrow: exportedTomorrow } =
-  getSolution(getGameDate())
+export const defaultSolution = getSolution(getGameDate())
+
+let activeSolution: string = defaultSolution.solution
+
+export function resetSolution(): string {
+  activeSolution = pickRandomSolution()
+  return activeSolution
+}
+
+export function getActiveSolution(): string {
+  return activeSolution || defaultSolution.solution
+}
+
+export function setActiveSolution(sol: string): void {
+  activeSolution = localeAwareUpperCase(sol)
+}
+
+export const {
+  solution: exportedSolution,
+  solutionGameDate: exportedSolutionGameDate,
+  solutionIndex: exportedSolutionIndex,
+  tomorrow: exportedTomorrow,
+} = defaultSolution
 
 // Re-export for compatibility
-export { exportedSolution as solution, exportedSolutionGameDate as solutionGameDate, exportedSolutionIndex as solutionIndex, exportedTomorrow as tomorrow }
+export {
+  exportedSolution as solution,
+  exportedSolutionGameDate as solutionGameDate,
+  exportedSolutionIndex as solutionIndex,
+  exportedTomorrow as tomorrow,
+}

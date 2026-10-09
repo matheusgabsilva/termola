@@ -31,7 +31,7 @@ export const SUCCESS_RATE_TEXT = 'Taxa de sucesso'
 export const CURRENT_STREAK_TEXT = 'Sequência atual'
 export const BEST_STREAK_TEXT = 'Melhor sequência'
 export const DISCOURAGE_INAPP_BROWSER_TEXT =
-  "Você está usando um navegador incorporado e pode ter problemas ao compartilhar ou salvar seus resultados. Recomendamos usar o navegador padrão do seu dispositivo."
+  'Você está usando um navegador incorporado e pode ter problemas ao compartilhar ou salvar seus resultados. Recomendamos usar o navegador padrão do seu dispositivo.'
 
 export const DATEPICKER_TITLE = 'Escolha uma data passada'
 export const DATEPICKER_CHOOSE_TEXT = 'Escolher'
